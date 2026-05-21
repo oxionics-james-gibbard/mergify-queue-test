@@ -1,5 +1,5 @@
 # Mergify Merge Queue Test Configuration
-# Using manual scope upload via gha-mergify-ci scopes-upload action.
+# Using manual scope upload via scopes-send CLI.
 
 scopes:
   source:
@@ -33,11 +33,15 @@ priority_rules:
     priority: high
     allow_checks_interruption: true
 
-pull_request_rules:
-  - name: auto-queue on CI pass
-    conditions:
+merge_protections_settings:
+  auto_merge_conditions: true
+
+merge_protections:
+  - name: ready to merge
+    if:
+      - base = master
+    success_conditions:
       - check-success = "Check status"
+      - "#approved-reviews-by >= 0"
       - -label = do-not-merge
       - -draft
-    actions:
-      queue:
