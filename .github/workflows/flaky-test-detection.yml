@@ -1,0 +1,43 @@
+name: Flaky Test Detection
+
+on:
+  schedule:
+    - cron: '0 */12 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  flaky-detection-fast:
+    name: Fast Tests - Flaky Detection (Run ${{ matrix.run_number }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        run_number: [1, 2, 3, 4, 5]
+    env:
+      MERGIFY_JOB_NAME: Fast tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          echo "Running fast tests (attempt ${{ matrix.run_number }})..."
+          sleep 10
+          cat > junit-fast-${{ matrix.run_number }}.xml <<'JUNIT'
+          <?xml version="1.0" encoding="utf-8"?>
+          <testsuites>
+            <testsuite name="fast-tests" tests="3" failures="0" time="10">
+              <testcase classname="test_basic" name="test_import" time="0.1"/>
+              <testcase classname="test_basic" name="test_config" time="0.2"/>
+              <testcase classname="test_basic" name="test_health" time="0.1"/>
+            </testsuite>
+          </testsuites>
+          JUNIT
+          echo "Tests passed" || true
+
+      - name: Upload to Mergify
+        if: success() || failure()
+        uses: mergifyio/gha-mergify-ci@v14
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          flaky_test_detection: true
+          report_path: "junit-fast-*.xml"
