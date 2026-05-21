@@ -63,9 +63,13 @@ jobs:
         env:
           MERGIFY_TOKEN: ${{ secrets.MERGIFY_TOKEN }}
         run: |
-          echo '{"scopes": "${{ steps.detect.outputs.scopes }}"}' > /tmp/scopes.json
-          cat /tmp/scopes.json
-          mergify ci scopes-send /tmp/scopes.json
+          IFS=',' read -ra SCOPE_LIST <<< "${{ steps.detect.outputs.scopes }}"
+          ARGS=""
+          for s in "${SCOPE_LIST[@]}"; do
+            ARGS="$ARGS --scope $s"
+          done
+          echo "Uploading scopes: $ARGS"
+          mergify ci scopes-send $ARGS
 
   static-validation:
     name: Static validation
