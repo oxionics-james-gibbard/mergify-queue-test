@@ -1,15 +1,11 @@
-# Mergify Merge Queue Test Configuration
-# Using manual scope upload via scopes-send CLI.
-
 scopes:
   source:
     manual:
   merge_queue_scope: merge-queue
-
 merge_queue:
   mode: parallel
   max_parallel_checks: 3
-
+  skip_intermediate_results: true
 queue_rules:
   - name: default
     queue_conditions:
@@ -21,7 +17,6 @@ queue_rules:
     merge_method: squash
     batch_size: 1
     checks_timeout: 30 min
-
 priority_rules:
   - name: light-changes
     conditions:
@@ -32,10 +27,8 @@ priority_rules:
           - files ~= ^\.claude/
     priority: high
     allow_checks_interruption: true
-
 merge_protections_settings:
   auto_merge_conditions: true
-
   reporting_method: check-runs
 merge_protections:
   - name: ready to merge
