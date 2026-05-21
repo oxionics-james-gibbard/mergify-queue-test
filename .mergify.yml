@@ -8,7 +8,7 @@ scopes:
 
 merge_queue:
   mode: parallel
-  max_parallel_checks: 1
+  max_parallel_checks: 3
 
 queue_rules:
   - name: default
