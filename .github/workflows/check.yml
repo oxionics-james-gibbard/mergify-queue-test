@@ -5,21 +5,6 @@ on:
   merge_group:
 
 jobs:
-  mergify-scopes:
-    name: Report scopes
-    runs-on: ubuntu-latest
-    outputs:
-      core: ${{ fromJSON(steps.scopes.outputs.scopes).core }}
-      standard: ${{ fromJSON(steps.scopes.outputs.scopes).standard }}
-      light: ${{ fromJSON(steps.scopes.outputs.scopes).light }}
-      merge-queue: ${{ fromJSON(steps.scopes.outputs.scopes).merge-queue }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: scopes
-        uses: Mergifyio/gha-mergify-ci@v11
-        with:
-          action: scopes
-
   detect-scope:
     name: Detect scope
     runs-on: ubuntu-latest
@@ -113,7 +98,6 @@ jobs:
     name: Check status
     if: ${{ !cancelled() }}
     needs:
-      - mergify-scopes
       - static-validation
       - detect-scope
       - fast-tests
@@ -127,14 +111,12 @@ jobs:
           echo "fast-tests: ${{ needs.fast-tests.result }}"
           echo "integration-tests: ${{ needs.integration-tests.result }}"
           echo "hitl-tests: ${{ needs.hitl-tests.result }}"
-          echo "mergify-scopes: ${{ needs.mergify-scopes.result }}"
 
           for result in \
             "${{ needs.static-validation.result }}" \
             "${{ needs.fast-tests.result }}" \
             "${{ needs.integration-tests.result }}" \
-            "${{ needs.hitl-tests.result }}" \
-            "${{ needs.mergify-scopes.result }}"; do
+            "${{ needs.hitl-tests.result }}"; do
             if [[ "$result" != "success" && "$result" != "skipped" ]]; then
               echo "FAILED: a required job did not succeed (got: $result)"
               exit 1
@@ -142,11 +124,3 @@ jobs:
           done
 
           echo "All required jobs passed or were skipped"
-
-      - uses: actions/checkout@v4
-      - name: Report status to Mergify
-        uses: Mergifyio/gha-mergify-ci@v11
-        with:
-          action: wait-jobs
-          jobs: ${{ toJSON(needs) }}
-          token: ${{ secrets.MERGIFY_TOKEN }}
