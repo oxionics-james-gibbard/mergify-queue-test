@@ -45,6 +45,7 @@ scopes:
   merge_queue_scope: merge-queue
 
 merge_queue:
+  mode: parallel
   max_parallel_checks: 1
 
 queue_rules:
