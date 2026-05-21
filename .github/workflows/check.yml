@@ -56,12 +56,16 @@ jobs:
             echo "scope=light" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install Mergify CLI
+        run: pip install mergify-cli
+
       - name: Upload scopes to Mergify
-        uses: Mergifyio/gha-mergify-ci@v11
-        with:
-          action: scopes-upload
-          token: ${{ secrets.MERGIFY_TOKEN }}
-          scopes: ${{ steps.detect.outputs.scopes }}
+        env:
+          MERGIFY_TOKEN: ${{ secrets.MERGIFY_TOKEN }}
+        run: |
+          echo '{"scopes": "${{ steps.detect.outputs.scopes }}"}' > /tmp/scopes.json
+          cat /tmp/scopes.json
+          mergify ci scopes-send /tmp/scopes.json
 
   static-validation:
     name: Static validation
