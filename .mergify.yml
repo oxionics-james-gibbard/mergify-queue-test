@@ -2,46 +2,46 @@
 # Mirrors the OxIonics/ionics config but with no approval required.
 
 scopes:
-    source: "files"
-    files:
-        core:
-            include:
-                - projects/liboi/**/*
-                - projects/ion-transport/**/*
-                - projects/hw-description/**/*
-                - projects/protos/**/*
-                - third-party/**/*
-                - projects/ion-experiments2/**/*
-                - projects/lab-experiments/**/*
-                - projects/cryo-experiments/**/*
-                - projects/artiq-extensions/**/*
-                - projects/sirocco/**/*
-                - projects/nano-vna/**/*
-        standard:
-            include:
-                - projects/orchestrator/**/*
-                - projects/orchestrator_client/**/*
-                - projects/service-errors/**/*
-                - projects/service-telemetry/**/*
-                - projects/controllers/**/*
-                - projects/orchestrator-dashboard/**/*
-                - projects/dashboard/**/*
-                - projects/hw-status-service/**/*
-                - projects/hw-status-service-rs/**/*
-                - projects/ionics-worker/**/*
-                - projects/oi-trace-utils/**/*
-        light:
-            include:
-                - systems/**/*
-                - docs/**/*
-                - tooling/**/*
-                - .claude/**/*
-                - projects/analysis/**/*
-                - projects/ionics-fits/**/*
-                - projects/trap-designs/**/*
-                - projects/oi-rust-build/**/*
-                - projects/systems-tooling/**/*
-                - projects/test-runners/**/*
+    source:
+        files:
+            core:
+                include:
+                    - projects/liboi/**/*
+                    - projects/ion-transport/**/*
+                    - projects/hw-description/**/*
+                    - projects/protos/**/*
+                    - third-party/**/*
+                    - projects/ion-experiments2/**/*
+                    - projects/lab-experiments/**/*
+                    - projects/cryo-experiments/**/*
+                    - projects/artiq-extensions/**/*
+                    - projects/sirocco/**/*
+                    - projects/nano-vna/**/*
+            standard:
+                include:
+                    - projects/orchestrator/**/*
+                    - projects/orchestrator_client/**/*
+                    - projects/service-errors/**/*
+                    - projects/service-telemetry/**/*
+                    - projects/controllers/**/*
+                    - projects/orchestrator-dashboard/**/*
+                    - projects/dashboard/**/*
+                    - projects/hw-status-service/**/*
+                    - projects/hw-status-service-rs/**/*
+                    - projects/ionics-worker/**/*
+                    - projects/oi-trace-utils/**/*
+            light:
+                include:
+                    - systems/**/*
+                    - docs/**/*
+                    - tooling/**/*
+                    - .claude/**/*
+                    - projects/analysis/**/*
+                    - projects/ionics-fits/**/*
+                    - projects/trap-designs/**/*
+                    - projects/oi-rust-build/**/*
+                    - projects/systems-tooling/**/*
+                    - projects/test-runners/**/*
     merge_queue_scope: merge-queue
 
 merge_queue:
