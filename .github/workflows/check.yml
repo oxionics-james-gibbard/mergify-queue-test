@@ -15,19 +15,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get git refs
-        id: refs
-        uses: Mergifyio/gha-mergify-ci@v11
-        with:
-          action: scopes-git-refs
-
       - name: Detect scope from changed files
         id: detect
-        env:
-          HEAD: ${{ steps.refs.outputs.head }}
-          BASE: ${{ steps.refs.outputs.base }}
         run: |
-          CHANGED=$(git diff --name-only "$BASE" "$HEAD" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            CHANGED=$(git diff --name-only "origin/$GITHUB_BASE_REF" HEAD)
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          fi
           echo "Changed files:"
           echo "$CHANGED"
 
