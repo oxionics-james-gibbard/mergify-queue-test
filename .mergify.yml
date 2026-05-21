@@ -2,78 +2,79 @@
 # Mirrors the OxIonics/ionics config but with no approval required.
 
 scopes:
-    source:
-        files:
-            core:
-                include:
-                    - projects/liboi/**/*
-                    - projects/ion-transport/**/*
-                    - projects/hw-description/**/*
-                    - projects/protos/**/*
-                    - third-party/**/*
-                    - projects/ion-experiments2/**/*
-                    - projects/lab-experiments/**/*
-                    - projects/cryo-experiments/**/*
-                    - projects/artiq-extensions/**/*
-                    - projects/sirocco/**/*
-                    - projects/nano-vna/**/*
-            standard:
-                include:
-                    - projects/orchestrator/**/*
-                    - projects/orchestrator_client/**/*
-                    - projects/service-errors/**/*
-                    - projects/service-telemetry/**/*
-                    - projects/controllers/**/*
-                    - projects/orchestrator-dashboard/**/*
-                    - projects/dashboard/**/*
-                    - projects/hw-status-service/**/*
-                    - projects/hw-status-service-rs/**/*
-                    - projects/ionics-worker/**/*
-                    - projects/oi-trace-utils/**/*
-            light:
-                include:
-                    - systems/**/*
-                    - docs/**/*
-                    - tooling/**/*
-                    - .claude/**/*
-                    - projects/analysis/**/*
-                    - projects/ionics-fits/**/*
-                    - projects/trap-designs/**/*
-                    - projects/oi-rust-build/**/*
-                    - projects/systems-tooling/**/*
-                    - projects/test-runners/**/*
-    merge_queue_scope: merge-queue
+  source:
+    files:
+      core:
+        include:
+          - projects/liboi/**/*
+          - projects/ion-transport/**/*
+          - projects/hw-description/**/*
+          - projects/protos/**/*
+          - third-party/**/*
+          - projects/ion-experiments2/**/*
+          - projects/lab-experiments/**/*
+          - projects/cryo-experiments/**/*
+          - projects/artiq-extensions/**/*
+          - projects/sirocco/**/*
+          - projects/nano-vna/**/*
+      standard:
+        include:
+          - projects/orchestrator/**/*
+          - projects/orchestrator_client/**/*
+          - projects/service-errors/**/*
+          - projects/service-telemetry/**/*
+          - projects/controllers/**/*
+          - projects/orchestrator-dashboard/**/*
+          - projects/dashboard/**/*
+          - projects/hw-status-service/**/*
+          - projects/hw-status-service-rs/**/*
+          - projects/ionics-worker/**/*
+          - projects/oi-trace-utils/**/*
+      light:
+        include:
+          - systems/**/*
+          - docs/**/*
+          - tooling/**/*
+          - .claude/**/*
+          - projects/analysis/**/*
+          - projects/ionics-fits/**/*
+          - projects/trap-designs/**/*
+          - projects/oi-rust-build/**/*
+          - projects/systems-tooling/**/*
+          - projects/test-runners/**/*
+  merge_queue_scope: merge-queue
 
 merge_queue:
-    max_parallel_checks: 1
+  max_parallel_checks: 1
 
 queue_rules:
-    - name: default
-      queue_conditions:
-          - check-success = "Check status"
-          - -label = do-not-merge
-          - -draft
-      merge_conditions:
-          - check-success = "Check status"
-      merge_method: squash
-      batch_size: 1
-      checks_timeout: 30 min
+  - name: default
+    queue_conditions:
+      - check-success = "Check status"
+      - -label = do-not-merge
+      - -draft
+    merge_conditions:
+      - check-success = "Check status"
+    merge_method: squash
+    batch_size: 1
+    checks_timeout: 30 min
 
 priority_rules:
-    - name: light-changes
-      conditions:
-          - or:
-                - files ~= ^docs/
-                - files ~= ^systems/
-                - files ~= ^tooling/
-                - files ~= ^\.claude/
-      priority: high
+  - name: light-changes
+    conditions:
+      - or:
+          - files ~= ^docs/
+          - files ~= ^systems/
+          - files ~= ^tooling/
+          - files ~= ^\.claude/
+    priority: high
 
+    allow_checks_interruption: true
 pull_request_rules:
-    - name: auto-queue on CI pass
-      conditions:
-          - check-success = "Check status"
-          - -label = do-not-merge
-          - -draft
-      actions:
-          queue:
+  - name: auto-queue on CI pass
+    conditions:
+      - check-success = "Check status"
+      - -label = do-not-merge
+      - -draft
+    actions:
+      queue:
