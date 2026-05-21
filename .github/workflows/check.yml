@@ -5,8 +5,8 @@ on:
   merge_group:
 
 jobs:
-  detect-scope:
-    name: Detect scope
+  detect-and-upload-scopes:
+    name: Detect scopes
     runs-on: ubuntu-latest
     outputs:
       scope: ${{ steps.detect.outputs.scope }}
@@ -15,29 +15,58 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get git refs
+        id: refs
+        uses: Mergifyio/gha-mergify-ci@v11
+        with:
+          action: scopes-git-refs
+
       - name: Detect scope from changed files
         id: detect
+        env:
+          HEAD: ${{ steps.refs.outputs.head }}
+          BASE: ${{ steps.refs.outputs.base }}
         run: |
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            BASE="origin/$GITHUB_BASE_REF"
-          else
-            BASE="${GITHUB_SHA}^"
-          fi
-
-          CHANGED=$(git diff --name-only "$BASE" HEAD 2>/dev/null || echo "")
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
           echo "Changed files:"
           echo "$CHANGED"
 
-          SCOPE="light"
+          SCOPES=""
 
           if echo "$CHANGED" | grep -qE '^(projects/liboi/|projects/ion-transport/|projects/hw-description/|projects/protos/|projects/artiq-extensions/|projects/sirocco/|projects/nano-vna/|third-party/|projects/ion-experiments2/|projects/lab-experiments/|projects/cryo-experiments/)'; then
-            SCOPE="core"
-          elif echo "$CHANGED" | grep -qE '^(projects/orchestrator/|projects/orchestrator_client/|projects/service-|projects/controllers/|projects/orchestrator-dashboard/|projects/dashboard/|projects/hw-status-service|projects/ionics-worker/|projects/oi-trace-utils/)'; then
-            SCOPE="standard"
+            SCOPES="${SCOPES:+$SCOPES,}core"
           fi
 
-          echo "Detected scope: $SCOPE"
-          echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
+          if echo "$CHANGED" | grep -qE '^(projects/orchestrator/|projects/orchestrator_client/|projects/service-|projects/controllers/|projects/orchestrator-dashboard/|projects/dashboard/|projects/hw-status-service|projects/ionics-worker/|projects/oi-trace-utils/)'; then
+            SCOPES="${SCOPES:+$SCOPES,}standard"
+          fi
+
+          if echo "$CHANGED" | grep -qE '^(systems/|docs/|tooling/|\.claude/|projects/analysis/|projects/ionics-fits/|projects/trap-designs/|projects/oi-rust-build/|projects/systems-tooling/|projects/test-runners/)'; then
+            SCOPES="${SCOPES:+$SCOPES,}light"
+          fi
+
+          if [ -z "$SCOPES" ]; then
+            SCOPES="light"
+          fi
+
+          echo "Detected scopes: $SCOPES"
+          echo "scopes=$SCOPES" >> "$GITHUB_OUTPUT"
+
+          # Determine highest scope for conditional job execution
+          if echo "$SCOPES" | grep -q "core"; then
+            echo "scope=core" >> "$GITHUB_OUTPUT"
+          elif echo "$SCOPES" | grep -q "standard"; then
+            echo "scope=standard" >> "$GITHUB_OUTPUT"
+          else
+            echo "scope=light" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload scopes to Mergify
+        uses: Mergifyio/gha-mergify-ci@v11
+        with:
+          action: scopes-upload
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          scopes: ${{ steps.detect.outputs.scopes }}
 
   static-validation:
     name: Static validation
@@ -52,11 +81,11 @@ jobs:
   fast-tests:
     name: Fast tests
     runs-on: ubuntu-latest
-    needs: [detect-scope, static-validation]
+    needs: [detect-and-upload-scopes, static-validation]
     steps:
       - name: Run unit tests
         run: |
-          echo "Scope: ${{ needs.detect-scope.outputs.scope }}"
+          echo "Scope: ${{ needs.detect-and-upload-scopes.outputs.scope }}"
           echo "Running fast tests (unit tests, type checks)..."
           sleep 60
           echo "Fast tests passed"
@@ -64,14 +93,14 @@ jobs:
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
-    needs: [detect-scope, fast-tests]
+    needs: [detect-and-upload-scopes, fast-tests]
     if: >-
-      needs.detect-scope.outputs.scope == 'core'
-      || needs.detect-scope.outputs.scope == 'standard'
+      needs.detect-and-upload-scopes.outputs.scope == 'core'
+      || needs.detect-and-upload-scopes.outputs.scope == 'standard'
     steps:
       - name: Run integration tests
         run: |
-          echo "Scope: ${{ needs.detect-scope.outputs.scope }}"
+          echo "Scope: ${{ needs.detect-and-upload-scopes.outputs.scope }}"
           echo "Running integration tests (Docker, orchestrator, E2E)..."
           sleep 180
           echo "Integration tests passed"
@@ -79,8 +108,8 @@ jobs:
   hitl-tests:
     name: "HITL (${{ matrix.system }})"
     runs-on: ubuntu-latest
-    needs: [detect-scope, fast-tests]
-    if: needs.detect-scope.outputs.scope == 'core'
+    needs: [detect-and-upload-scopes, fast-tests]
+    if: needs.detect-and-upload-scopes.outputs.scope == 'core'
     strategy:
       fail-fast: false
       matrix:
@@ -88,7 +117,7 @@ jobs:
     steps:
       - name: Run HITL tests on ${{ matrix.system }}
         run: |
-          echo "Scope: ${{ needs.detect-scope.outputs.scope }}"
+          echo "Scope: ${{ needs.detect-and-upload-scopes.outputs.scope }}"
           echo "Running HITL tests on ${{ matrix.system }} hardware..."
           echo "(Real duration: 44-81 min, simulated: 5 min)"
           sleep 300
@@ -99,7 +128,7 @@ jobs:
     if: ${{ !cancelled() }}
     needs:
       - static-validation
-      - detect-scope
+      - detect-and-upload-scopes
       - fast-tests
       - integration-tests
       - hitl-tests

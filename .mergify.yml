@@ -1,6 +1,14 @@
 # Mergify Merge Queue Test Configuration
-# Scopes temporarily removed to test basic queue flow.
-# Re-add scopes after confirming plan tier with Mergify.
+# Using manual scope upload via gha-mergify-ci scopes-upload action.
+
+scopes:
+  source:
+    manual:
+  merge_queue_scope: merge-queue
+
+merge_queue:
+  mode: parallel
+  max_parallel_checks: 1
 
 queue_rules:
   - name: default
