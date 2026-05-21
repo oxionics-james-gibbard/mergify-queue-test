@@ -149,3 +149,4 @@ jobs:
         with:
           action: wait-jobs
           jobs: ${{ toJSON(needs) }}
+          token: ${{ secrets.MERGIFY_TOKEN }}
