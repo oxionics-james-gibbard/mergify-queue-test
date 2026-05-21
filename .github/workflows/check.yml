@@ -86,12 +86,32 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-and-upload-scopes, static-validation]
     steps:
+      - uses: actions/checkout@v4
+
       - name: Run unit tests
         run: |
           echo "Scope: ${{ needs.detect-and-upload-scopes.outputs.scope }}"
           echo "Running fast tests (unit tests, type checks)..."
           sleep 60
+
+          cat > test-results.xml <<'JUNIT'
+          <?xml version="1.0" encoding="utf-8"?>
+          <testsuites>
+            <testsuite name="fast-tests" tests="3" failures="0" time="60">
+              <testcase classname="test_basic" name="test_import" time="0.1"/>
+              <testcase classname="test_basic" name="test_config" time="0.2"/>
+              <testcase classname="test_basic" name="test_health" time="0.1"/>
+            </testsuite>
+          </testsuites>
+          JUNIT
           echo "Fast tests passed"
+
+      - name: Upload test results to Mergify
+        if: always()
+        uses: Mergifyio/gha-mergify-ci@v11
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          report_path: test-results.xml
 
   integration-tests:
     name: Integration tests
